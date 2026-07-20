@@ -33,21 +33,21 @@ classifiers = [
 ]
 
 dependencies = [
-    "filelock>=3.18,<4",
-    "platformdirs>=4.3,<5",
-    "pydantic>=2.11,<3",
-    "telethon>=1.44,<2",
-    "typer>=0.16,<1",
+    "filelock>=3.31.1,<4.0.0",
+    "platformdirs>=4.10.1,<5.0.0",
+    "pydantic>=2.13.4,<3.0.0",
+    "telethon>=1.44.0,<2.0.0",
+    "typer>=0.27.0,<0.28.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.4,<10",
-    "pytest-asyncio>=1,<2",
-    "pytest-cov>=6.2,<8",
-    "pyyaml>=6.0,<7",
-    "ruff>=0.12,<1",
-    "ty>=0.0.1a16,<1",
+    "pytest>=9.1.1,<10.0.0",
+    "pytest-asyncio>=1.4.0,<2.0.0",
+    "pytest-cov>=7.1.0,<8.0.0",
+    "pyyaml>=6.0.3,<7.0.0",
+    "ruff>=0.15.22,<0.16.0",
+    "ty>=0.0.61,<0.0.62",
 ]
 
 [project.scripts]
@@ -59,7 +59,7 @@ Repository = "https://github.com/leynier/telegram-cli"
 Issues = "https://github.com/leynier/telegram-cli/issues"
 
 [build-system]
-requires = ["uv_build>=0.11.29,<0.12.0"]
+requires = ["uv_build>=0.11.30,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.ruff]

@@ -12,8 +12,8 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
           python-version: "3.14"
@@ -35,8 +35,8 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
           python-version: "3.14"

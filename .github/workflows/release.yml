@@ -13,8 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8
         with:
           python-version: "3.14"
       - run: uv sync --all-groups --locked
@@ -25,7 +25,7 @@ jobs:
       - run: uv run python -m clitg.catalog
       - run: git diff --exit-code -- schemas
       - run: uv build --no-sources
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: distributions
           path: dist/
@@ -35,11 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: distributions
           path: dist
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v8
       - run: uv publish --trusted-publishing always dist/*
       - env:
           GH_TOKEN: ${{ github.token }}

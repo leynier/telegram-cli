@@ -15,8 +15,8 @@ jobs:
       CLITG_TEST_API_HASH: ${{ secrets.CLITG_TEST_API_HASH }}
       CLITG_TEST_PHONE: ${{ secrets.CLITG_TEST_PHONE }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v8
         with:
           python-version: "3.14"
       - run: uv sync --all-groups --locked
