@@ -221,7 +221,7 @@ def test_help_version_and_jsonl() -> None:
     version_option = runner.invoke(cli.app, ["--version"])
     version = runner.invoke(cli.app, ["version"])
     assert version.exit_code == version_option.exit_code == 0
-    assert json.loads(version_option.stdout)["data"]["cli_version"] == "0.3.0"
+    assert json.loads(version_option.stdout)["data"]["cli_version"] == "0.3.2"
     assert json.loads(version.stdout)["data"] == json.loads(version_option.stdout)["data"]
     assert json.loads(version.stdout)["data"]["schema_version"] == "0.2"
     jsonl = runner.invoke(cli.app, ["--output", "jsonl", "profiles", "list"])

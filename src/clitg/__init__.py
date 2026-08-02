@@ -5,7 +5,7 @@ from importlib.metadata import PackageNotFoundError, version
 try:
     __version__ = version("clitg")
 except PackageNotFoundError:
-    __version__ = "0.3.0"
+    __version__ = "0.3.2"
 
 SCHEMA_VERSION = "0.2"
 

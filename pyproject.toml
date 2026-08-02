@@ -1,6 +1,6 @@
 [project]
 name = "clitg"
-version = "0.3.0"
+version = "0.3.2"
 description = "Agent-first Telegram CLI with structured JSON and skills for Claude Code, Codex, Copilot, Cursor, and more"
 readme = "readme.md"
 authors = [
