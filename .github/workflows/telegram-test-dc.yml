@@ -18,7 +18,7 @@ jobs:
       CLITG_TEST_PASSWORD: ${{ secrets.CLITG_TEST_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v9.0.0
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: "3.14"
       - run: uv sync --all-groups --locked
