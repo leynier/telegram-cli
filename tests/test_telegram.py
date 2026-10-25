@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 from filelock import Timeout as FileLockTimeout
+from PIL import Image
 from telethon import functions, types
 from telethon.errors import SessionPasswordNeededError
 
@@ -896,6 +897,24 @@ async def test_transcription_wait_paths(
     fake_client.request_result = None
     no_wait = await adapter.feature_invoke(profile, feature, params, values={"wait_seconds": 0})
     assert no_wait["_"] == "InputPeerSelf"
+
+
+@pytest.mark.asyncio
+async def test_qr_login_writes_png(
+    adapter: StubAdapter,
+    profile: Profile,
+    fake_client: FakeClient,
+    tmp_path: Path,
+) -> None:
+    fake_client.authorized = False
+    output = tmp_path / "qr" / "login.png"
+    result = await adapter.qr_login(profile, output, 12)
+    assert result["authorized"] is True
+    assert result["qr_path"] == str(output.resolve())
+    with Image.open(output) as image:
+        assert image.format == "PNG"
+        assert image.width == image.height > 0
+        image.verify()
 
 
 @pytest.mark.asyncio

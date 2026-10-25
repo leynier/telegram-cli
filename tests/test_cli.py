@@ -506,7 +506,9 @@ def test_main_and_usage_error(
     capsys.readouterr()
     monkeypatch.setattr(sys, "argv", ["clitg", "messages", "get"])
     assert cli.main() == 2
-    assert json.loads(capsys.readouterr().out)["error"]["code"] == "invalid_input"
+    captured = capsys.readouterr()
+    assert json.loads(captured.out)["error"]["code"] == "invalid_input"
+    assert captured.err == ""
     FakeService.failure = "domain"
     monkeypatch.setattr(sys, "argv", ["clitg", "state", "get"])
     assert cli.main() == 4
@@ -522,9 +524,9 @@ def test_main_exit_and_module(monkeypatch: pytest.MonkeyPatch) -> None:
     assert called == [True]
 
 
-def test_main_returns_click_exit_code(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_main_returns_typer_exit_code(monkeypatch: pytest.MonkeyPatch) -> None:
     def raise_exit(**_: Any) -> None:
-        raise cli.click.exceptions.Exit(7)
+        raise cli.typer.Exit(7)
 
     monkeypatch.setattr(cli, "app", raise_exit)
     assert cli.main() == 7
