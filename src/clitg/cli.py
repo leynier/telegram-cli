@@ -1856,7 +1856,7 @@ def main() -> int:
 
     try:
         result = app(standalone_mode=False)
-    except click.exceptions.Exit as exc:
+    except typer.Exit as exc:
         return int(exc.exit_code)
     except click.ClickException as exc:
         request_id = str(uuid.uuid4())

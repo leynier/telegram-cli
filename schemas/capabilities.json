@@ -1685,8 +1685,30 @@
     {
       "command": null,
       "commands": [],
+      "method": "auth.finishFirebasePnvLogin",
+      "python_class": "telethon.tl.functions.auth.FinishFirebasePnvLoginRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "critical",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
       "method": "auth.finishPasskeyLogin",
       "python_class": "telethon.tl.functions.auth.FinishPasskeyLoginRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "critical",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "auth.firebasePnvSignUp",
+      "python_class": "telethon.tl.functions.auth.FirebasePnvSignUpRequest",
       "quota_consuming": false,
       "reason": null,
       "requirements": [],
@@ -1731,6 +1753,17 @@
       "commands": [],
       "method": "auth.importWebTokenAuthorization",
       "python_class": "telethon.tl.functions.auth.ImportWebTokenAuthorizationRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "critical",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "auth.initFirebasePnvLogin",
+      "python_class": "telethon.tl.functions.auth.InitFirebasePnvLoginRequest",
       "quota_consuming": false,
       "reason": null,
       "requirements": [],
@@ -3099,6 +3132,105 @@
     {
       "command": null,
       "commands": [],
+      "method": "communities.create",
+      "python_class": "telethon.tl.functions.communities.CreateRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.getJoinedCommunities",
+      "python_class": "telethon.tl.functions.communities.GetJoinedCommunitiesRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "read",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.getParticipantJoinedChats",
+      "python_class": "telethon.tl.functions.communities.GetParticipantJoinedChatsRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "read",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.getPeerLinkRequests",
+      "python_class": "telethon.tl.functions.communities.GetPeerLinkRequestsRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "read",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.toggleAllPeerLinkRequestApproval",
+      "python_class": "telethon.tl.functions.communities.ToggleAllPeerLinkRequestApprovalRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.toggleCommunityCollapsedInDialogs",
+      "python_class": "telethon.tl.functions.communities.ToggleCommunityCollapsedInDialogsRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.toggleParticipantBanned",
+      "python_class": "telethon.tl.functions.communities.ToggleParticipantBannedRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.togglePeerLink",
+      "python_class": "telethon.tl.functions.communities.TogglePeerLinkRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "communities.togglePeerLinkRequestApproval",
+      "python_class": "telethon.tl.functions.communities.TogglePeerLinkRequestApprovalRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
       "method": "contacts.acceptContact",
       "python_class": "telethon.tl.functions.contacts.AcceptContactRequest",
       "quota_consuming": false,
@@ -3428,6 +3560,94 @@
       "requirements": [],
       "risk": "write",
       "status": "high-level"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.deleteAllWelcomeMessages",
+      "python_class": "telethon.tl.functions.ephemeral.DeleteAllWelcomeMessagesRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "destructive",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.deleteMessage",
+      "python_class": "telethon.tl.functions.ephemeral.DeleteMessageRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "destructive",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.deleteWelcomeMessage",
+      "python_class": "telethon.tl.functions.ephemeral.DeleteWelcomeMessageRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "destructive",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.editMessage",
+      "python_class": "telethon.tl.functions.ephemeral.EditMessageRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.getCallbackAnswer",
+      "python_class": "telethon.tl.functions.ephemeral.GetCallbackAnswerRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "read",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.getWelcomeMessages",
+      "python_class": "telethon.tl.functions.ephemeral.GetWelcomeMessagesRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "read",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.reportMessage",
+      "python_class": "telethon.tl.functions.ephemeral.ReportMessageRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "unknown",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "ephemeral.sendMessage",
+      "python_class": "telethon.tl.functions.ephemeral.SendMessageRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "write",
+      "status": "raw-only"
     },
     {
       "command": "dialogs.unarchive",
@@ -4188,6 +4408,17 @@
       "requirements": [],
       "risk": "unknown",
       "status": "high-level"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "messages.composeRichMessageWithAI",
+      "python_class": "telethon.tl.functions.messages.ComposeRichMessageWithAIRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "unknown",
+      "status": "raw-only"
     },
     {
       "command": "chats.create-group",
@@ -6186,6 +6417,17 @@
     {
       "command": null,
       "commands": [],
+      "method": "messages.requestChatJoinWebView",
+      "python_class": "telethon.tl.functions.messages.RequestChatJoinWebViewRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "unknown",
+      "status": "raw-only"
+    },
+    {
+      "command": null,
+      "commands": [],
       "method": "messages.requestEncryption",
       "python_class": "telethon.tl.functions.messages.RequestEncryptionRequest",
       "quota_consuming": false,
@@ -6907,6 +7149,17 @@
       "requirements": [],
       "risk": "unknown",
       "status": "high-level"
+    },
+    {
+      "command": null,
+      "commands": [],
+      "method": "messages.translateRichMessage",
+      "python_class": "telethon.tl.functions.messages.TranslateRichMessageRequest",
+      "quota_consuming": false,
+      "reason": null,
+      "requirements": [],
+      "risk": "unknown",
+      "status": "raw-only"
     },
     {
       "command": "messages.translate",
@@ -9315,6 +9568,6 @@
   ],
   "generated_at": "generated",
   "schema_version": "0.2",
-  "telegram_layer": 227,
-  "telethon_version": "1.44.0"
+  "telegram_layer": 229,
+  "telethon_version": "1.45.0"
 }
