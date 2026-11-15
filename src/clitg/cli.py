@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import inspect
 import json
 import os
@@ -78,6 +79,11 @@ business_app = typer.Typer(help="Manage Telegram Business automation.")
 stats_app = typer.Typer(help="Inspect Telegram channel and content statistics.")
 todos_app = typer.Typer(help="Manage collaborative Telegram checklists.")
 quick_replies_app = typer.Typer(help="Manage Telegram Business quick replies.")
+mcp_app = typer.Typer(help="Serve clitg to MCP clients and manage their access.")
+mcp_clients_app = typer.Typer(help="Inspect and revoke paired MCP OAuth clients.")
+mcp_tokens_app = typer.Typer(help="Manage static MCP bearer tokens.")
+mcp_app.add_typer(mcp_clients_app, name="clients")
+mcp_app.add_typer(mcp_tokens_app, name="tokens")
 
 for name, subapp in (
     ("profiles", profiles_app),
@@ -115,6 +121,7 @@ for name, subapp in (
     ("stats", stats_app),
     ("todos", todos_app),
     ("quick-replies", quick_replies_app),
+    ("mcp", mcp_app),
 ):
     app.add_typer(subapp, name=name)
 
@@ -1833,6 +1840,190 @@ def updates_watch(
             idle_timeout=idle_timeout,
             total_timeout=total_timeout,
             heartbeat=heartbeat,
+        ),
+    )
+
+
+def _mcp_module() -> Any:
+    try:
+        return importlib.import_module("clitg.mcp_app")
+    except ImportError as exc:
+        raise ClitgError(
+            ErrorCode.INVALID_INPUT,
+            "The MCP server requires the mcp extra",
+            details={"install": "uv tool install 'clitg[mcp]'"},
+        ) from exc
+
+
+def _serve_choice(value: str, allowed: tuple[str, ...], label: str) -> str:
+    if value not in allowed:
+        raise ClitgError(ErrorCode.INVALID_INPUT, f"{label} must be one of: {', '.join(allowed)}")
+    return value
+
+
+def _serve_runner(context: CliContext, lock_wait: float) -> tuple[Any, Any, str]:
+    module = _mcp_module()
+    service = _service(context)
+    name = service.profiles.resolve(context.profile).name
+    runner = module.CliRunner(
+        name, timeout_seconds=context.timeout_seconds, lock_wait_seconds=lock_wait
+    )
+    module.configure_logging(context.verbose)
+    return module, runner, name
+
+
+@mcp_app.command("serve")
+def mcp_serve(
+    ctx: typer.Context,
+    transport: str = typer.Option("stdio", "--transport", help="stdio or http."),
+    host: str | None = typer.Option(
+        None, "--host", help="Bind address, or netbird for this peer's NetBird address."
+    ),
+    port: int = typer.Option(8765, "--port", min=0, max=65535),
+    public_url: str | None = typer.Option(
+        None, "--public-url", help="Public HTTPS origin that reaches this server."
+    ),
+    tunnel: str = typer.Option("none", "--tunnel", help="none or netbird."),
+    lock_wait: float = typer.Option(
+        15, "--lock-wait", min=0, max=300, help="Seconds to wait for a busy profile session."
+    ),
+    pair_delivery: str = typer.Option(
+        "both", "--pair-delivery", help="both, terminal, saved-messages, or none."
+    ),
+) -> None:
+    """Serve clitg tools over MCP stdio or Streamable HTTP."""
+
+    context = _context(ctx)
+    if transport == "stdio":
+        _serve_stdio(ctx, lock_wait)
+        return
+
+    async def events() -> Any:
+        _serve_choice(transport, ("stdio", "http"), "Transport")
+        _serve_choice(tunnel, ("none", "netbird"), "Tunnel")
+        _serve_choice(pair_delivery, ("both", "terminal", "saved-messages", "none"), "Delivery")
+        if public_url and tunnel != "none":
+            raise ClitgError(ErrorCode.INVALID_INPUT, "Use either --public-url or --tunnel")
+        module, runner, name = _serve_runner(context, lock_wait)
+        options = module.ServeOptions(
+            profile=name,
+            host=host,
+            port=port,
+            public_url=public_url,
+            tunnel=tunnel,
+            pair_delivery=pair_delivery,
+            verbose=context.verbose,
+        )
+        async for event in module.HttpServe(options, runner, _service(context).paths).events():
+            yield event
+
+    _execute_stream(ctx, "mcp.serve", events)
+
+
+def _serve_stdio(ctx: typer.Context, lock_wait: float) -> None:
+    context = _context(ctx)
+    request_id = str(uuid.uuid4())
+    try:
+        module, runner, _ = _serve_runner(context, lock_wait)
+    except ClitgError as exc:
+        _emit_error(context, "mcp.serve", exc.info, request_id)
+        raise typer.Exit(exc.exit_code) from exc
+    asyncio.run(module.serve_stdio(runner))
+    _service(context).record_audit(context.profile, "mcp.serve", request_id, ok=True)
+
+
+@mcp_app.command("pair")
+def mcp_pair(
+    ctx: typer.Context,
+    deliver: str = typer.Option("both", "--deliver", help="both, terminal, or saved-messages."),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+) -> None:
+    """Issue a single-use code that approves one MCP OAuth connection."""
+
+    _execute(
+        ctx,
+        "mcp.pair",
+        lambda: _service(_context(ctx)).mcp_pair(
+            _context(ctx).profile, delivery=deliver, dry_run=dry_run
+        ),
+    )
+
+
+@mcp_clients_app.command("list")
+def mcp_clients_list(ctx: typer.Context) -> None:
+    """List registered MCP OAuth clients without secrets."""
+
+    _execute(
+        ctx, "mcp.clients.list", lambda: _service(_context(ctx)).mcp_clients(_context(ctx).profile)
+    )
+
+
+@mcp_clients_app.command("revoke")
+def mcp_clients_revoke(
+    ctx: typer.Context,
+    client_id: str = typer.Option(..., "--client-id"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+    confirm: str | None = typer.Option(None, "--confirm"),
+) -> None:
+    """Revoke one MCP OAuth client and every grant it holds."""
+
+    _execute(
+        ctx,
+        "mcp.clients.revoke",
+        lambda: _service(_context(ctx)).mcp_revoke_client(
+            _context(ctx).profile, client_id, dry_run=dry_run, confirmation=confirm
+        ),
+    )
+
+
+@mcp_tokens_app.command("create")
+def mcp_tokens_create(
+    ctx: typer.Context,
+    name: str = typer.Option(..., "--name"),
+    expires_days: int | None = typer.Option(None, "--expires-days"),
+    token_file: Path | None = typer.Option(
+        None, "--token-file", help="Write the token to a new private file instead of stdout."
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+) -> None:
+    """Create a static bearer token for MCP clients that send an Authorization header."""
+
+    _execute(
+        ctx,
+        "mcp.tokens.create",
+        lambda: _service(_context(ctx)).mcp_create_token(
+            _context(ctx).profile,
+            name,
+            expires_days=expires_days,
+            token_file=token_file,
+            dry_run=dry_run,
+        ),
+    )
+
+
+@mcp_tokens_app.command("list")
+def mcp_tokens_list(ctx: typer.Context) -> None:
+    """List static MCP bearer tokens without secrets."""
+
+    _execute(
+        ctx, "mcp.tokens.list", lambda: _service(_context(ctx)).mcp_tokens(_context(ctx).profile)
+    )
+
+
+@mcp_tokens_app.command("revoke")
+def mcp_tokens_revoke(
+    ctx: typer.Context,
+    name: str = typer.Option(..., "--name"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+    confirm: str | None = typer.Option(None, "--confirm"),
+) -> None:
+    """Revoke one static MCP bearer token."""
+
+    _execute(
+        ctx,
+        "mcp.tokens.revoke",
+        lambda: _service(_context(ctx)).mcp_revoke_token(
+            _context(ctx).profile, name, dry_run=dry_run, confirmation=confirm
         ),
     )
 

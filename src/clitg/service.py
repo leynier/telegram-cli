@@ -25,6 +25,7 @@ from clitg.features import (
     build_feature_params,
     normalize_feature_result,
 )
+from clitg.mcp_store import McpStore, pairing_delivery_targets, pairing_message
 from clitg.models import (
     BatchOperation,
     CommandResult,
@@ -1794,6 +1795,173 @@ class ClitgService:
             encoding="utf-8",
         )
         return CommandResult(data={"path": str(output.resolve())})
+
+    @property
+    def mcp(self) -> McpStore:
+        """Return the MCP authorization store."""
+
+        store = getattr(self, "_mcp_store", None)
+        if store is None:
+            store = McpStore(self.paths)
+            self._mcp_store = store
+        return store
+
+    async def mcp_pair(
+        self, requested: str | None, *, delivery: str, dry_run: bool
+    ) -> CommandResult:
+        """Issue a single-use MCP pairing code and deliver it."""
+
+        if delivery not in {"both", "terminal", "saved-messages"}:
+            raise ClitgError(
+                ErrorCode.INVALID_INPUT, "Delivery must be both, terminal, or saved-messages"
+            )
+        name = self.profiles.resolve(requested).name
+        terminal, saved = pairing_delivery_targets(delivery)
+        targets = [*(["terminal"] if terminal else []), *(["saved-messages"] if saved else [])]
+        if dry_run:
+            return CommandResult(
+                data={
+                    "action": "mcp.pair",
+                    "profile": name,
+                    "delivered_to": targets,
+                    "dry_run": True,
+                }
+            )
+        code, expires_at = self.mcp.issue_pairing_code(name)
+        data: dict[str, Any] = {"profile": name, "expires_at": expires_at, "delivered_to": []}
+        if terminal:
+            data["code"] = code
+            data["delivered_to"].append("terminal")
+        if saved:
+            try:
+                await self.send(
+                    requested,
+                    "me",
+                    text=pairing_message(name, code, expires_at),
+                    files=[],
+                    reply_to=None,
+                    topic_id=None,
+                    parse_mode="plain",
+                    media_kind="auto",
+                    schedule_at=None,
+                    idempotency_key=None,
+                    dry_run=False,
+                )
+            except ClitgError as exc:
+                if not terminal:
+                    raise
+                data["saved_messages_error"] = exc.info.code
+            else:
+                data["delivered_to"].append("saved-messages")
+        return CommandResult(data=data)
+
+    def mcp_clients(self, requested: str | None) -> CommandResult:
+        """List registered MCP OAuth clients."""
+
+        clients = self.mcp.list_clients(self.profiles.resolve(requested).name)
+        return CommandResult(data={"clients": clients}, items=clients)
+
+    def mcp_revoke_client(
+        self,
+        requested: str | None,
+        client_id: str,
+        *,
+        dry_run: bool,
+        confirmation: str | None,
+    ) -> CommandResult:
+        """Revoke one MCP OAuth client and all its grants."""
+
+        name = self.profiles.resolve(requested).name
+        if dry_run:
+            known = any(item["client_id"] == client_id for item in self.mcp.list_clients(name))
+            if not known:
+                raise ClitgError(ErrorCode.NOT_FOUND, "MCP client was not found")
+            return CommandResult(
+                data={
+                    "action": "mcp.clients.revoke",
+                    "client_id": client_id,
+                    "required_confirmation": "mcp.clients.revoke",
+                    "dry_run": True,
+                }
+            )
+        self._require_confirmation("mcp.clients.revoke", confirmation)
+        return CommandResult(data={"revoked": self.mcp.revoke_client(name, client_id)})
+
+    def mcp_create_token(
+        self,
+        requested: str | None,
+        token_name: str,
+        *,
+        expires_days: int | None,
+        token_file: Path | None,
+        dry_run: bool,
+    ) -> CommandResult:
+        """Create a named static bearer token for header-based MCP clients."""
+
+        name = self.profiles.resolve(requested).name
+        token_name = ProfileStore.validate_name(token_name)
+        if expires_days is not None and not 1 <= expires_days <= 3650:
+            raise ClitgError(ErrorCode.INVALID_INPUT, "Expiry must be between 1 and 3650 days")
+        if token_file is not None and token_file.exists():
+            raise ClitgError(ErrorCode.CONFLICT, "Token file already exists")
+        if dry_run:
+            return CommandResult(
+                data={
+                    "action": "mcp.tokens.create",
+                    "name": token_name,
+                    "expires_days": expires_days,
+                    "token_file": token_file,
+                    "dry_run": True,
+                }
+            )
+        ttl = None if expires_days is None else expires_days * 86400
+        token, record = self.mcp.create_static_token(name, token_name, ttl)
+        if token_file is None:
+            return CommandResult(data={**record, "token": token})
+        try:
+            descriptor = os.open(token_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(token + "\n")
+        except OSError as exc:
+            self.mcp.revoke_static_token(name, token_name)
+            raise ClitgError(ErrorCode.INVALID_INPUT, "Unable to write the token file") from exc
+        return CommandResult(data={**record, "token_file": token_file})
+
+    def mcp_tokens(self, requested: str | None) -> CommandResult:
+        """List static MCP bearer tokens without secrets."""
+
+        tokens = self.mcp.list_static_tokens(self.profiles.resolve(requested).name)
+        return CommandResult(data={"tokens": tokens}, items=tokens)
+
+    def mcp_revoke_token(
+        self,
+        requested: str | None,
+        token_name: str,
+        *,
+        dry_run: bool,
+        confirmation: str | None,
+    ) -> CommandResult:
+        """Revoke one named static MCP bearer token."""
+
+        name = self.profiles.resolve(requested).name
+        if dry_run:
+            active = [
+                item
+                for item in self.mcp.list_static_tokens(name)
+                if item["name"] == token_name and item["active"]
+            ]
+            if not active:
+                raise ClitgError(ErrorCode.NOT_FOUND, f"Token '{token_name}' was not found")
+            return CommandResult(
+                data={
+                    "action": "mcp.tokens.revoke",
+                    "name": token_name,
+                    "required_confirmation": "mcp.tokens.revoke",
+                    "dry_run": True,
+                }
+            )
+        self._require_confirmation("mcp.tokens.revoke", confirmation)
+        return CommandResult(data={"revoked": self.mcp.revoke_static_token(name, token_name)})
 
     def state_counts(self) -> CommandResult:
         """Return safe auxiliary state counts."""

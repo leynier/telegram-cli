@@ -77,6 +77,14 @@ Conversation export appends normalized JSONL messages and writes a manifest cont
 cursor. Optional media downloads live below the export directory. Resume is explicit and an
 existing export is never overwritten implicitly.
 
+## MCP server
+
+The optional `mcp` extra adds an MCP presentation layer beside Typer. `mcp serve` builds the SDK server, registers curated typed tools plus `clitg_run`, and executes every tool call as a `clitg` subprocess for the server's profile. The subprocess boundary keeps policies, confirmations, critical tokens, idempotency, audit records, and Telethon session handling identical to the terminal contract. A per-server lock serializes calls, and a bounded retry waits while another process holds the profile session.
+
+Streamable HTTP runs statelessly with JSON responses behind uvicorn on a pre-bound socket. Host and Origin headers are restricted to loopback, the bound address, and the public origin. When the issuer is HTTPS or loopback the server acts as its own OAuth 2.1 authorization server with dynamic client registration, PKCE, single-use authorization codes, one-hour access tokens, and rotating 30-day refresh tokens bound to the resource URL. Authorization requests are approved on a pairing page with a single-use, rate-limited code issued by `mcp pair` or at startup. Elsewhere only static bearer tokens are accepted. `McpStore` keeps clients, pending requests, and SHA-256 hashes of every secret in a private SQLite file.
+
+The optional NetBird tunnel supervises `netbird expose` and reads its public URL before the server starts, so the OAuth issuer always matches the address clients see.
+
 ## Generated contracts
 
 `uv run python -m clitg.catalog` regenerates the checked-in capability and JSON Schema artifacts.

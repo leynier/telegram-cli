@@ -17,7 +17,7 @@ jobs:
         with:
           enable-cache: true
           python-version: "3.14"
-      - run: uv sync --all-groups --locked
+      - run: uv sync --all-groups --all-extras --locked
       - run: uv lock --check
       - run: uv run ruff format --check .
       - run: uv run ruff check .
@@ -40,7 +40,7 @@ jobs:
         with:
           enable-cache: true
           python-version: "3.14"
-      - run: uv sync --all-groups --locked
+      - run: uv sync --all-groups --all-extras --locked
       - run: uv run pytest
       - run: uv build --no-sources
       - shell: bash
@@ -48,3 +48,4 @@ jobs:
           wheel="$(find dist -name 'clitg-*.whl' -print -quit)"
           test -n "${wheel}"
           uvx --from "${wheel}" clitg version
+          uvx --from "${wheel}[mcp]" clitg mcp serve --help

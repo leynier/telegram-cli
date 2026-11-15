@@ -17,7 +17,7 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.14"
-      - run: uv sync --all-groups --locked
+      - run: uv sync --all-groups --all-extras --locked
       - name: Validate tag and package version
         shell: bash
         run: test "v$(uv version --short)" = "${GITHUB_REF_NAME}"

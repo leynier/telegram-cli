@@ -29,6 +29,7 @@ Read only the references needed for the task:
 - For AI transforms, Business settings, stickers, or schedules: [specialized-actions.md](references/specialized-actions.md) for payload and capability constraints.
 - For update streams or read batches: [streams-and-batches.md](references/streams-and-batches.md) for bounds, checkpoints, and batch policy.
 - For legacy structured parameters or raw MTProto: [raw-and-registered.md](references/raw-and-registered.md) for parameter encoding and raw risk checks.
+- To serve clitg to MCP clients or manage their pairing codes, tokens, and clients: [mcp-server.md](references/mcp-server.md) for transports, authorization, and revocation.
 
 ## Failures
 
