@@ -1,6 +1,6 @@
 # MCP server
 
-Starting `clitg mcp serve`, exposing it beyond loopback, issuing pairing codes, and creating or revoking MCP tokens or clients change who can operate the account; do them only with explicit authorization. They require the `mcp` extra: `uv tool install 'clitg[mcp]'`.
+Starting `clitg mcp serve`, exposing it beyond loopback, issuing pairing codes, and creating or revoking MCP tokens or clients change who can operate the account; do them only with explicit authorization. They require clitg 0.4 or later with the `mcp` extra: `uv tool install 'clitg[mcp]'`.
 
 Local clients spawn `clitg --profile <profile> mcp serve`, which speaks MCP over stdio. HTTP mode is a JSONL stream: `clitg --profile <profile> --output jsonl mcp serve --transport http`. Read `server.started` for `url`, `issuer`, and `auth`; a `pairing.code` item carries a single-use code only when terminal delivery was selected. Stop the process to end the stream and expect a terminal summary.
 

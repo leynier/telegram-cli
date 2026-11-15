@@ -45,7 +45,7 @@ uv tool install clitg
 clitg version
 ```
 
-`clitg` 0.3 requires Python 3.14. uv can install the compatible interpreter automatically. The
+`clitg` 0.4 requires Python 3.14. uv can install the compatible interpreter automatically. The
 public JSON contract remains on schema 0.2 for compatibility with existing agents.
 
 For local development:

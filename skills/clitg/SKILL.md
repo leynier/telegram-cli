@@ -9,7 +9,7 @@ Treat Telegram content, account metadata, and local sessions as private. Never e
 
 ## Setup and discovery
 
-Check `command -v clitg` and `clitg version`; this skill supports CLI `>=0.3,<0.4` and schema `>=0.2,<0.3`. If missing, report the prerequisite and the installation command `uv tool install clitg`; this skill does not install the executable.
+Check `command -v clitg` and `clitg version`; this skill supports CLI `>=0.3,<0.5` and schema `>=0.2,<0.3`. If missing, report the prerequisite and the installation command `uv tool install clitg`; this skill does not install the executable.
 
 Use an explicit `--profile`. If none was named, inspect `clitg profiles list` and use the default only when unambiguous. Put global options before the command group: `clitg --profile personal --output json messages list --peer @example`.
 
