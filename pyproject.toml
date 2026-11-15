@@ -1,7 +1,7 @@
 [project]
 name = "clitg"
 version = "0.3.2"
-description = "Agent-first Telegram CLI with structured JSON and skills for Claude Code, Codex, Copilot, Cursor, and more"
+description = "Agent-first Telegram CLI and MCP server with structured JSON and skills for Claude Code, Codex, ChatGPT, Copilot, Cursor, and more"
 readme = "readme.md"
 authors = [
     { name = "Leynier Gutiérrez González", email = "leynier41@gmail.com" }
@@ -21,6 +21,9 @@ keywords = [
     "grok",
     "cursor",
     "amp",
+    "mcp",
+    "mcp-server",
+    "chatgpt",
     "mtproto",
     "telethon",
     "typer",
@@ -60,6 +63,11 @@ clitg = "clitg.cli:main"
 Homepage = "https://github.com/leynier/telegram-cli"
 Repository = "https://github.com/leynier/telegram-cli"
 Issues = "https://github.com/leynier/telegram-cli/issues"
+
+[project.optional-dependencies]
+mcp = [
+    "mcp>=2.3.0,<3.0.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.30,<0.13.0"]

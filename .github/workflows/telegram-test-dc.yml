@@ -21,5 +21,5 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.14"
-      - run: uv sync --all-groups --locked
+      - run: uv sync --all-groups --all-extras --locked
       - run: uv run pytest -m telegram_test_dc

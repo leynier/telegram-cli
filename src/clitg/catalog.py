@@ -107,6 +107,17 @@ COMMAND_CATALOG: dict[str, dict[str, Any]] = {
     "inbox": {"commands": ["list"]},
     "invite-links": {"commands": []},
     "join-requests": {"commands": []},
+    "mcp": {
+        "commands": [
+            "serve",
+            "pair",
+            "clients list",
+            "clients revoke",
+            "tokens create",
+            "tokens list",
+            "tokens revoke",
+        ]
+    },
     "media": {"commands": ["download"]},
     "messages": {
         "commands": [

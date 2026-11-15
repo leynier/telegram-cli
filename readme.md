@@ -24,6 +24,7 @@ powered by Telethon. It is not a Bot API wrapper and does not use a BotFather to
   checkpoints, and bounded read-only batches.
 - **Agent discovery:** machine-readable command, schema, capability, error, cursor, risk, and skill
   metadata are part of the product.
+- **MCP server:** serve the same commands to ChatGPT, Claude, Codex, Cursor, and other MCP clients over stdio or Streamable HTTP with OAuth pairing or bearer tokens.
 
 Build inbox assistants, Telegram research agents, translation and summarization workflows,
 Business automations, personal knowledge capture, collaborative follow-up systems, recurring
@@ -443,6 +444,96 @@ clitg --profile personal --output jsonl updates watch \
 Known updates use stable event types. Other Telegram updates are retained as
 `telegram.raw_update`. Each item carries an opaque cursor. A consumer checkpoint is updated only
 after an item is emitted.
+
+## MCP server
+
+`clitg` can serve its commands to Model Context Protocol clients such as ChatGPT, Claude Code, Codex, and Cursor. Install the optional `mcp` extra:
+
+```bash
+uv tool install 'clitg[mcp]'
+```
+
+The server exposes 15 tools: typed tools for dialogs, contact resolution, the unread inbox, and listing, getting, searching, reading context, replying to, sending, and marking messages read; `clitg_commands` and `clitg_command` for discovery; and `clitg_run`, which executes any other command from its CLI arguments. Every tool call runs the normal CLI for the server's profile, so local policies, dry runs, exact confirmations, critical tokens, idempotency keys, and content-free audit records behave exactly as in a terminal. The `mcp` command group itself is not reachable through MCP.
+
+> [!WARNING]
+> A connected MCP client has the same authority as the CLI on that profile, including reading local files for uploads and writing exports or downloads on the server host. Attach a [local policy](#local-authorization-policy) that limits commands, peers, and mutation risks before exposing a profile to a remote client.
+
+### Local clients over stdio
+
+MCP clients that spawn local processes run the server over stdio:
+
+```json
+{
+  "mcpServers": {
+    "telegram": {
+      "command": "clitg",
+      "args": ["--profile", "personal", "mcp", "serve"]
+    }
+  }
+}
+```
+
+In stdio mode stdout carries only MCP protocol messages and no authentication is involved.
+
+### Streamable HTTP
+
+```bash
+clitg --profile personal --output jsonl mcp serve --transport http --port 8765
+```
+
+HTTP mode is a streaming command and requires `--output jsonl`, like `updates watch`. It listens on `127.0.0.1` by default and emits `server.started`, `pairing.code`, `tunnel.started`, and `server.stopped` items followed by a terminal summary. Stop it with Ctrl+C. The server serializes tool calls for its profile and waits up to `--lock-wait` seconds, 15 by default, when another `clitg` process is using the same Telegram session.
+
+The server offers two authentication methods:
+
+- **OAuth 2.1** with authorization code, PKCE, dynamic client registration, and rotating refresh tokens. It is available when the issuer is an HTTPS `--public-url`, a tunnel URL, or a loopback address. ChatGPT uses this method.
+- **Static bearer tokens** for clients that send an `Authorization: Bearer` header. On a non-loopback address without a public HTTPS origin, such as a NetBird or Tailscale IP, only static tokens are accepted.
+
+```bash
+clitg --profile personal mcp tokens create --name laptop --token-file ./laptop-token.txt
+clitg --profile personal mcp tokens list
+clitg --profile personal mcp tokens revoke --name laptop --confirm mcp.tokens.revoke
+```
+
+Without `--token-file` the token is printed once in the JSON result. Tokens, refresh tokens, authorization codes, and pairing codes are stored only as SHA-256 hashes in a private `mcp.sqlite3` file next to the other local state.
+
+### Pair ChatGPT
+
+1. Expose the server through a public HTTPS origin and start it with that origin as `--public-url`, or use `--tunnel netbird`.
+2. In ChatGPT, enable developer mode, create a connector for `https://<origin>/mcp`, and choose OAuth authentication.
+3. ChatGPT registers itself and opens the clitg pairing page, which names the client and the address it returns to.
+4. Enter the pairing code and approve. ChatGPT then refreshes its access automatically.
+
+Pairing codes have eight characters, work once, and expire after 10 minutes. When no OAuth client has been paired yet, `serve` issues one at startup and delivers it according to `--pair-delivery`: `both` by default, which shows it in the `pairing.code` event and sends it to your Saved Messages, or `terminal`, `saved-messages`, or `none`. Issue another code at any time:
+
+```bash
+clitg --profile personal mcp pair --deliver both
+```
+
+Each authorization request accepts five attempts, and 10 failed attempts within 15 minutes lock pairing for the profile temporarily. Inspect or revoke paired clients:
+
+```bash
+clitg --profile personal mcp clients list
+clitg --profile personal mcp clients revoke --client-id '<client-id>' --confirm mcp.clients.revoke
+```
+
+### Expose the server with NetBird
+
+Any HTTPS reverse proxy or tunnel works with `--public-url`. NetBird is supported directly, both on NetBird Cloud and on self-hosted deployments with the reverse proxy enabled.
+
+For ChatGPT, prefer a persistent NetBird reverse proxy service so the connector URL never changes. In the NetBird dashboard, open **Reverse Proxy**, **Services**, and **Add Service**, target this peer's NetBird address on port 8765 over HTTP, and leave PIN, password, and SSO protection disabled because ChatGPT cannot pass them; the clitg OAuth pairing protects the server. Then start the server on the NetBird address:
+
+```bash
+clitg --profile personal --output jsonl mcp serve \
+  --transport http \
+  --host netbird \
+  --public-url https://telegram.example.com
+```
+
+`--host netbird` binds to this peer's NetBird IPv4 address as reported by `netbird status --json`.
+
+For quick tests, `--tunnel netbird` runs `netbird expose` for the server's port, binds to the NetBird address, uses the generated public URL, and removes it when the server stops. It requires NetBird 0.66 or later, **Peer Expose** enabled under **Settings**, **Clients** for a peer group that contains this peer, and **Block Inbound Connections** disabled on the peer. The URL changes on every run, so a ChatGPT connector must be created again each time.
+
+Self-hosted NetBird needs a proxy cluster and a verified domain under **Reverse Proxy**, **Clusters** and **Custom Domains** before services can be published. More tunnel providers are tracked in [#26](https://github.com/leynier/telegram-cli/issues/26), and running the server as a background service or in containers in [#27](https://github.com/leynier/telegram-cli/issues/27).
 
 ## Local authorization policy
 
